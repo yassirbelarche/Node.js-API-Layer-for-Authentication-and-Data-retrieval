@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JWT Authentication</title>
+</head>
+<body>
+    <h1>Login</h1>
+    <form id="login-form">
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button type="submit">Login</button>
+    </form>
+
+    <h2>Protected Data</h2>
+    <button id="get-protected">Get Protected Data</button>
+    <div id="protected-result"></div>
+
+    <script>
+        const loginForm = document.getElementById('login-form');
+        const getProtectedButton = document.getElementById('get-protected');
+        const protectedResultDiv = document.getElementById('protected-result');
+
+        // Handle Login Form Submission
+        loginForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            const response = await fetch('http://localhost:5000/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+            if (data.token) {
+                // Store the token in localStorage
+                localStorage.setItem('jwt', data.token);
+                alert('Login successful!');
+            } else {
+                alert('Invalid credentials');
+            }
+        });
+
+        // Fetch Protected Data with Token
+        getProtectedButton.addEventListener('click', async () => {
+            const token = localStorage.getItem('jwt');
+            if (!token) {
+                alert('You need to login first');
+                return;
+            }
+
+            const response = await fetch('http://localhost:5000/api/protected', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                protectedResultDiv.innerHTML = `Protected Data: ${JSON.stringify(data)}`;
+            } else {
+                alert('Unauthorized access');
+            }
+        });
+    </script>
+</body>
+</html>
+
